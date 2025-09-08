@@ -154,10 +154,12 @@ def make_lists(all_data, extraction_model):
 #Only features Datasets
 def make_databases(features_1, features_2, user_ids_1, user_ids_2):
     x_1 = torch.tensor(np.vstack(features_1), dtype = torch.float32) 
-    y_1 = torch.tensor(np.hstack(user_ids_1), dtype = torch.long)
+    y_1 = np.repeat(user_ids_1, 15)
+    y_1 = torch.tensor(np.hstack(y_1), dtype = torch.long)
 
     x_2 = torch.tensor(np.vstack(features_2), dtype = torch.float32)
-    y_2 = torch.tensor(np.hstack(user_ids_2), dtype = torch.long)
+    y_2 = np.repeat(user_ids_2, 15)
+    y_2 = torch.tensor(np.hstack(y_2), dtype = torch.long)
 
     dataset_1 = TensorDataset(x_1, y_1)
     loader_1 = DataLoader(dataset_1, batch_size = 32, shuffle = True)
