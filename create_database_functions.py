@@ -160,11 +160,4 @@ def make_databases(features_1, features_2, user_ids_1, user_ids_2):
     x_2 = torch.tensor(np.vstack(features_2), dtype = torch.float32)
     y_2 = np.repeat(user_ids_2, 15)
     y_2 = torch.tensor(np.hstack(y_2), dtype = torch.long)
-
-    dataset_1 = TensorDataset(x_1, y_1)
-    loader_1 = DataLoader(dataset_1, batch_size = 32, shuffle = True)
-
-    dataset_2 = TensorDataset(x_2, y_2)
-    loader_2 = DataLoader(dataset_2, batch_size = 32, shuffle = True)
-    return x_1, x_2, y_1, y_2, loader_1, loader_2
-
+    return x_1, x_2, y_1, y_2
