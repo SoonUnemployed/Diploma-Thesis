@@ -108,7 +108,7 @@ class UserClassifier(nn.Module):
         )
         #Use dummy data to calculate the Linear size frot he 2 extractors
         with torch.no_grad():
-            dummy = torch.zero(1, input_channels, 1, time_length)
+            dummy = torch.zeros(1, input_channels, 1, time_length)
             dummy_out = self.classifier_1(dummy)
             self.flattened_size = dummy_out.view(1, -1).size(1)
 
@@ -125,7 +125,7 @@ class UserClassifier(nn.Module):
 #NN with classification layer for features with stimuli label 
 class EEGUserClassifier(nn.Module):
     def __init__(self, input_channels, time_length, num_classes = 12):
-        super(UserClassifier, self).__init__()
+        super(EEGUserClassifier, self).__init__()
 
         self.classifier_1 = nn.Sequential(
             nn.Conv2d(
@@ -155,12 +155,12 @@ class EEGUserClassifier(nn.Module):
         )
         #Use dummy data to calculate the Linear size frot he 2 extractors
         with torch.no_grad():
-            dummy = torch.zero(1, input_channels, 1, time_length)
+            dummy = torch.zeros(1, input_channels, 1, time_length)
             dummy_out = self.classifier_1(dummy)
             self.flattened_size = dummy_out.view(1, -1).size(1)
 
         self.classifier_2 = nn.Sequential(
-            nn.Flatten(start_dim=1, end_dim=-1),
+            nn.Flatten(start_dim = 1, end_dim = -1),
             nn.Linear(self.flattened_size, num_classes)
         )
 
