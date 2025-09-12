@@ -89,26 +89,85 @@ def get_averages(all_data):
     
 #Classification Layer for the data without the labels
 class UserClassifier(nn.Module):
-    def __init__(self, embedding_dim, n_users):
-        super().__init__()
-        self.fc = nn.Linear(embedding_dim, n_users)
+    def __init__(self, input_channels, time_length, num_classes = 12):
+        super(UserClassifier, self).__init__()
 
-    def forward(self, x):
-        return self.fc(x)
-    
-#NN with classification layer for features with stimuli label 
-class EEGUserClassifier(nn.Module):
-    def __init__(self, input_dim, n_users):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(128, n_users)
+        self.classifier_1 = nn.Sequential(
+            nn.Conv2d(
+                in_channels = input_channels,
+                out_channels = 12,
+                kernel_size = (1, 8),
+                stride = (1, 1),
+                padding = 'same',
+                bias = False
+            ),
+            nn.BatchNorm2d(12, ep = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
+            nn.ELU(alpha = 1.0),
+            nn.Dropout(p = 0.5, inplace = False),
+            nn.AvgPool2d(kernel_size = (1, 2), stride = (1, 2), padding = 0)
+        )
+        #Use dummy data to calculate the Linear size frot he 2 extractors
+        with torch.no_grad():
+            dummy = torch.zero(1, input_channels, 1, time_length)
+            dummy_out = self.classifier_1(dummy)
+            self.flattened_size = dummy_out.view(1, -1).size(1)
+
+        self.classifier_2 = nn.Sequential(
+            nn.Flatten(start_dim=1, end_dim=-1),
+            nn.Linear(self.flattened_size, num_classes)
         )
 
     def forward(self, x):
-        return self.net(x)
+        x = self.classifier_1(x)
+        x = self.classifier_2(x)
+        return x
+    
+#NN with classification layer for features with stimuli label 
+class EEGUserClassifier(nn.Module):
+    def __init__(self, input_channels, time_length, num_classes = 12):
+        super(UserClassifier, self).__init__()
+
+        self.classifier_1 = nn.Sequential(
+            nn.Conv2d(
+                in_channels = input_channels,
+                out_channels = 12,
+                kernel_size = (1, 8),
+                stride = (1, 1),
+                padding = 'same',
+                bias = False
+            ),
+            nn.BatchNorm2d(12, ep = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
+            nn.ELU(alpha = 1.0),
+            nn.Dropout(p = 0.5, inplace = False),
+            nn.AvgPool2d(kernel_size = (1, 2), stride = (1, 2), padding = 0),
+            nn.Conv2d(
+                in_channels = 12,
+                out_channels = 6,
+                kernel_size = (1, 4),
+                stride = (1, 1),
+                padding = 'same',
+                bias = False
+            ),
+            nn.BatchNorm2d(6, ep = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
+            nn.ELU(alpha = 1.0),
+            nn.Dropout(p = 0.5, inplace = False),
+            nn.AvgPool2d(kernel_size = (1, 2), stride = (1, 2), padding = 0)
+        )
+        #Use dummy data to calculate the Linear size frot he 2 extractors
+        with torch.no_grad():
+            dummy = torch.zero(1, input_channels, 1, time_length)
+            dummy_out = self.classifier_1(dummy)
+            self.flattened_size = dummy_out.view(1, -1).size(1)
+
+        self.classifier_2 = nn.Sequential(
+            nn.Flatten(start_dim=1, end_dim=-1),
+            nn.Linear(self.flattened_size, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.classifier_1(x)
+        x = self.classifier_2(x)
+        return x
     
 #Training model for both Classifiers 
 def train_classifier(model, train_loader, n_epochs = 10, lr = 1e-3, device = "cpu"):
