@@ -101,7 +101,7 @@ class UserClassifier(nn.Module):
                 padding = 'same',
                 bias = False
             ),
-            nn.BatchNorm2d(12, ep = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
+            nn.BatchNorm2d(12, eps = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
             nn.ELU(alpha = 1.0),
             nn.Dropout(p = 0.5, inplace = False),
             nn.AvgPool2d(kernel_size = (1, 2), stride = (1, 2), padding = 0)
@@ -136,7 +136,7 @@ class EEGUserClassifier(nn.Module):
                 padding = 'same',
                 bias = False
             ),
-            nn.BatchNorm2d(12, ep = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
+            nn.BatchNorm2d(12, eps = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
             nn.ELU(alpha = 1.0),
             nn.Dropout(p = 0.5, inplace = False),
             nn.AvgPool2d(kernel_size = (1, 2), stride = (1, 2), padding = 0),
@@ -148,7 +148,7 @@ class EEGUserClassifier(nn.Module):
                 padding = 'same',
                 bias = False
             ),
-            nn.BatchNorm2d(6, ep = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
+            nn.BatchNorm2d(6, eps = 1e-5, momentum = 0.01, affine = True, track_running_stats = True),
             nn.ELU(alpha = 1.0),
             nn.Dropout(p = 0.5, inplace = False),
             nn.AvgPool2d(kernel_size = (1, 2), stride = (1, 2), padding = 0)
