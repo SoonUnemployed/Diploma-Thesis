@@ -15,7 +15,7 @@ from lib.train.cv import cross_validation
 
 def arg_parcer() -> argparse.ArgumentParser:
     
-    parser = argparse.ArgumentParser(description = "Train/Evaluation of models")
+    parser = argparse.ArgumentParser(description = "Closed-set model")
     
     parser.add_argument(
         "--input_pre",
@@ -70,9 +70,9 @@ def main(args: argparse.ArgumentParser):
     label_mapping(split_df, output_path)   
     
    #NO CV CODE (train + evaluation)    
-    #Load train dataset for XGBoost
+    #Load train dataset
     X, y, _ = load_dataset(split_df, preprocessed_path, features_path, "train", model_type)
-    #Load evaluation dataset for XGBoost
+    #Load evaluation dataset
     X_val, y_val, _ = load_dataset(split_df, preprocessed_path, features_path, "val", model_type)
     
     #Apply scalar to dataset

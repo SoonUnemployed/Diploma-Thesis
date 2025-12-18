@@ -10,9 +10,43 @@ from lib.test.metrics import evaluate_model
 
 def eegnet(X: np.array, y: np.array, device: torch.device) -> EEGNet:
 
-    model = EEGNet(n_chans = X.shape[1], n_outputs = len(np.unique(y)), n_times = X.shape[2], sfreq = 256.0).to(device)
+    model = EEGNet(n_chans = X.shape[1], n_outputs = len(np.unique(y)), n_times = X.shape[2], sfreq = 256.0, drop_prob = 0.25).to(device)
 
     return model
+
+def eegnet_feature_extractor(model: EEGNet, X: np.array, y: np.array, device: torch.device) -> torch.Tensor: 
+
+    feature_extractor = torch.nn.Sequential(
+    model.ensuredims,
+    model.dimshuffle,
+    model.conv_temporal,
+    model.bnorm_temporal,
+    model.conv_spatial,
+    model.bnorm_1,
+    model.elu_1,
+    model.pool_1,
+    model.drop_1,
+    model.conv_separable_depth,
+    model.conv_separable_point,
+    model.bnorm_2,
+    model.elu_2,
+    model.pool_2,
+    model.drop_2,
+)
+    dataset = EEGNet_Dataset(X, y)
+    loader = DataLoader(dataset, batch_size = 32, shuffle = False)
+
+    embeddings = []
+    with torch.no_grad():
+        for X, y, in loader:
+                X = X.to(device)
+                embedding = feature_extractor(X)
+                embedding = embedding.view(embedding.size(0), -1)
+                embeddings.append(embedding.cpu())
+    
+    embeddings = torch.cat(embeddings, dim = 0)
+
+    return embeddings 
 
 
 def train_eegnet(model: EEGNet, X: np.array, y: np.array, X_val: np.array, y_val: np.array, device: torch.device) -> tuple[EEGNet, float]:
@@ -30,8 +64,7 @@ def train_eegnet(model: EEGNet, X: np.array, y: np.array, X_val: np.array, y_val
     epochs = 300
     best_val_acc = 0.0
     epochs_no_improve = 0
-    patience = 25         
-    min_delta = 1e-4       #Ignore tiny changes in val loss
+    patience = 25
     best_state = None
 
     for epoch in range(epochs): 

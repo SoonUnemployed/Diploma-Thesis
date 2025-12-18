@@ -1,12 +1,8 @@
-from pathlib import Path
-import json 
+from pathlib import Path 
 import numpy as np
+from braindecode.models import EEGNet
 
-load_path = Path("/Users/hrakol/projects/diploma_thesis/results/xgboost_closed_set_metrics.npz")
 
-data = np.load(load_path, allow_pickle = True)
+model = EEGNet(32, 15, n_times=718, sfreq=256.0)
 
-print(data["accuracy"])
-print(data["confusion_matrix"])
-print(data["number_of_users"])
-print(data["chance"])
+print(model)

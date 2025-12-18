@@ -16,7 +16,7 @@ def load_dataset(df: pd.DataFrame,  preprocessed_path: Path, features_path: Path
     y = []
     groups = []
 
-    if set_type in ["train", "val", "test"]:
+    if set_type in ["train", "val", "test", "impostor"]:
         temp = df[df["split"] == set_type]
     else: 
         temp = df[df["split"] != "impostor"]

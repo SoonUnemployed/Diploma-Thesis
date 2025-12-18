@@ -29,6 +29,10 @@ def split_data(out_path: Path):
     temp = df[df["user"] == 8]
     temp = temp.sample(n = 2, random_state = 19).index
     used_idx = used_idx.append(temp).sort_values()
+    temp = df.iloc[temp]
+    temp = temp["session"].tolist()
+
+    impostor_sessions.extend(temp)
 
     not_used_df = df.drop(used_idx)
     selected = not_used_df.groupby("user", group_keys = False).apply(
