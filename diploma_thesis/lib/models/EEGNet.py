@@ -163,6 +163,7 @@ def train_eegnet(model: EEGNet, X: np.array, y: np.array, X_val: np.array, y_val
     return model, acc
 
 def test_eegnet(model: EEGNet, X: np.array, y: np.array, model_path: Path, device: torch.device) -> tuple[dict, np.array]:
+    
     m_path = model_path / ("eegnet.pth")
     test_dataset = EEGNet_Dataset(X, y)
     test_loader = DataLoader(test_dataset, batch_size = 32, shuffle = False)
@@ -197,3 +198,52 @@ def test_eegnet(model: EEGNet, X: np.array, y: np.array, model_path: Path, devic
         print(f"{k}: \n{v}\n")
 
     return metrics, all_preds
+
+def test_eegnet_per_freq(model: EEGNet, X: np.array, y: np.array, freq: np.array, model_path: Path, device: torch.device) -> tuple[dict, np.array]:
+    
+    m_path = model_path / ("eegnet.pth")
+    model.load_state_dict(torch.load(m_path))
+    model.to(device)
+    model.eval()
+
+    results = {}
+
+    for f in np.unique(freq):
+        
+        mask = freq == f
+        X_f = X[mask]
+        y_f = y[mask]
+
+        test_dataset = EEGNet_Dataset(X_f, y_f)
+        test_loader = DataLoader(test_dataset, batch_size = 32, shuffle = False)
+
+        all_probs = []
+        all_labels = []
+
+        with torch.no_grad():
+            for X_batch, y_batch in test_loader:
+                X_batch = X_batch.to(device)
+                y_batch = y_batch.to(device)
+
+                outputs = model(X_batch)
+                probs = outputs.cpu().numpy()
+
+                all_probs.append(probs)
+                all_labels.append(y_batch.cpu().numpy().astype(int))
+
+        all_probs = np.concatenate(all_probs)
+        all_labels = np.concatenate(all_labels)
+
+        all_preds = all_probs.argmax(axis = 1).astype(int)
+        metrics = evaluate_model(all_preds, all_labels)
+
+        print("\n===== EEGNet Metrics =====")
+        for k, v in metrics.items():
+            print(f"{k}: \n{v}\n")
+
+        results[f] = {
+            "metrics": metrics,
+            "predictions": all_preds,
+        }
+
+    return results

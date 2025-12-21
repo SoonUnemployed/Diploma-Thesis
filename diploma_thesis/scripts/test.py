@@ -2,14 +2,17 @@ from pathlib import Path
 import argparse
 import torch
 import joblib
+from itertools import groupby
+import numpy as np
 
 from lib.utils.set_seed import set_seed
 from lib.train.get_csv import get_csv
 from lib.train.dataset import load_dataset, reshape_dataset, apply_scalar
-from lib.models.EEGNet import eegnet, test_eegnet
-from lib.models.XGBoost import XGBoost_Classifier, test_xgboost
+from lib.models.EEGNet import eegnet, test_eegnet, test_eegnet_per_freq
+from lib.models.XGBoost import XGBoost_Classifier, test_xgboost, test_xgboost_per_freq
 from lib.train.remap import remap
-from lib.test.save_metrics import save_metrics
+from lib.test.save_metrics import save_metrics, save_metrics_per_frequency
+from lib.utils.stimuli_labels import load_stim, select_seq, arrange_stim
 
 def arg_parcer() -> argparse.ArgumentParser:
     
@@ -50,6 +53,13 @@ def arg_parcer() -> argparse.ArgumentParser:
         help = "Path to model weights"
     )
 
+    parser.add_argument(
+        "--stim",
+        type = Path,
+        required = True,
+        help = "Path to stimuli sequences"
+    )
+
     args = parser.parse_args()
 
     return args
@@ -61,6 +71,7 @@ def main(args: argparse.ArgumentParser):
     output_path = args.output
     model_path = args.model_path
     model_type = args.model
+    stim_path = args.stim
     model_type = model_type.lower()
 
     #Set seed 
@@ -70,8 +81,9 @@ def main(args: argparse.ArgumentParser):
     
     #Get train-eval-test split csv 
     split_df = get_csv(preprocessed_path)
+    
     #Load train dataset for XGBoost
-    X, y, _ = load_dataset(split_df, preprocessed_path, features_path, "test", model_type)
+    X, y, group = load_dataset(split_df, preprocessed_path, features_path, "test", model_type)
     #Apply scaler
     X = apply_scalar(X, model_type, "test", model_path)
     #Reshape data based on the model
@@ -79,16 +91,27 @@ def main(args: argparse.ArgumentParser):
     #Remap the labels
     y = remap(y, model_path)
 
+    #Get stimuli sequence
+    stim_seq = load_stim(stim_path)
+    #Get the training stim seq
+    stim_seq = select_seq(stim_seq, split_df, "test")
+    #Arrange stim sequences in a array
+    freq = arrange_stim(stim_seq, group)
+
     #Get and test model
     if model_type == "eegnet":
         model = eegnet(X, y, device)
-        results, y_pred = test_eegnet(model, X, y, model_path, device)
+        #results, y_pred = test_eegnet(model, X, y, model_path, device)
+        results = test_eegnet_per_freq(model, X, y, freq, model_path, device)
     elif model_type == "xgboost":
         model = XGBoost_Classifier(y)
-        results, y_pred = test_xgboost(model, X, y, model_path)
+        #results, y_pred = test_xgboost(model, X, y, model_path)
+        results = test_xgboost_per_freq(model, X, y, freq, model_path)
     
     #Save resulting metrics
-    save_metrics(results, y_pred, y, model_type, output_path)
+    #save_metrics(results, y_pred, y, model_type, output_path)
+    save_metrics_per_frequency(results, y, model_type, output_path)
+
     return 
 
 

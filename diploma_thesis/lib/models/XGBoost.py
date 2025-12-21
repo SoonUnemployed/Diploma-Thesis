@@ -64,3 +64,36 @@ def test_xgboost(model: XGBClassifier, X: np.array, y: np.array, model_path: Pat
         print(f"{k}: \n{v}\n")
 
     return xgb_metrics, y_pred_closed
+
+def test_xgboost_per_freq(model: XGBClassifier, X: np.array, y: np.array, freq: np.array, model_path: Path) -> dict:
+    
+    m_path = model_path / ("xgboost.json")
+    model.load_model(m_path)
+
+    results = {}
+
+    for f in np.unique(freq):
+        
+        mask = freq == f
+
+        X_f = X[mask]
+        y_f = y[mask]
+
+        y_pred_closed = model.predict(X_f)
+        acc_closed = accuracy_score(y_f, y_pred_closed)
+
+        xgb_metrics = evaluate_model(y_pred_closed, y_f)
+
+        print("Closed-set XGBoost accuracy:", acc_closed)
+        print(classification_report(y_f, y_pred_closed))
+
+        print("\n===== XGBoost Metrics =====")
+        for k, v in xgb_metrics.items():
+            print(f"{k}: \n{v}\n")
+
+        results[f] = {
+            "metrics": xgb_metrics,
+            "predictions": y_pred_closed,
+        }
+
+    return results
