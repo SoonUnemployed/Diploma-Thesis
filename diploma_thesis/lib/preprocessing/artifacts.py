@@ -26,8 +26,9 @@ def choose_components(filtered_signal: mne.io.edf.edf.RawEDF, ica: mne.preproces
         eog_components = list(overlap)
 
     #All components that need to be excluded (We keep "other")
-    exclude_comp =  [i for i, label in enumerate(ica_labels["labels"]) if label not in ["brain", "other", "eye blink"]] + eog_components
-    exclude_comp.sort()
+    exclude_comp =  [i for i, label in enumerate(ica_labels["labels"]) if label not in ["brain", "other", "eye blink"]] 
+    exclude_comp.update(eog_components)
+    exclude_comp = sorted(exclude_comp)
 
     return exclude_comp
 
