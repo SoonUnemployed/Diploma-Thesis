@@ -40,7 +40,6 @@ def eval_unknown(E_impostor: torch.Tensor, y_impostor: torch.Tensor, grp_imposto
     impostor_matches = defaultdict(list)
 
     for i in range(total):
-        
         e = E_impostor[i]
         imp_key = f"user_{y_impostor[i]}_session_{grp_impostor[i]}"
         matched_users = [] 
@@ -48,12 +47,10 @@ def eval_unknown(E_impostor: torch.Tensor, y_impostor: torch.Tensor, grp_imposto
 
         for claimed_id in templates.keys():
             accept, _ = verify_claim(e, claimed_id, templates, thresholds)
-            
             if accept:
                 matched_users.append(claimed_id)
-                break
+                
         if matched_users:
-
             FP += 1
             impostor_matches[imp_key] = matched_users
         else:

@@ -130,7 +130,7 @@ def main(args: argparse.ArgumentParser):
         target_far = 0.7
     
     #Aggregate embeddings
-    
+    '''
     emb_train_ses, y_train_ses, train_grp = aggregate_by_session(train_emb, train_y, train_grp)    
     emb_val_ses, y_val_ses, val_grp = aggregate_by_session(val_emb, val_y, val_grp)
     emb_test_ses, y_test_ses, test_grp = aggregate_by_session(test_emb, test_y, test_grp)
@@ -142,7 +142,7 @@ def main(args: argparse.ArgumentParser):
     emb_val_ses, y_val_ses, val_grp = aggregate_by_session_per_freq(val_emb, val_y, val_grp, val_freq, freq)
     emb_test_ses, y_test_ses, test_grp = aggregate_by_session_per_freq(test_emb, test_y, test_grp, test_freq, freq)
     emb_imp_ses, y_imp_ses, imp_grp = aggregate_by_session_per_freq(imp_emb, imp_y, imp_grp, imp_freq, freq)
-    '''
+    
     #Create enrollment set 
     templates = build_templates(emb_train_ses, y_train_ses)
 
@@ -158,7 +158,7 @@ def main(args: argparse.ArgumentParser):
     #Evaluate the impostor sessions
     FRR, TP, FN = eval_known(emb_known, y_known, grp_known, templates, thresholds)
     FAR, FP, TN, imp_matches = eval_unknown(emb_unkn, y_unkn, grp_unkn, templates, thresholds)
-
+    
     #Save results
     save_results(path, TP, FN, FP, TN, FAR, FRR, thresholds, imp_matches, target_far)
 
